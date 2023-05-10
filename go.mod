@@ -3,9 +3,9 @@ module github.com/crowdsecurity/cs-firewall-bouncer
 go 1.20
 
 require (
+	github.com/asians-cloud/go-cs-bouncer v0.0.5
 	github.com/coreos/go-systemd/v22 v22.3.2
 	github.com/crowdsecurity/crowdsec v1.4.6
-	github.com/crowdsecurity/go-cs-bouncer v0.0.3
 	github.com/google/nftables v0.0.0-20220808154552-2eca00135732
 	github.com/prometheus/client_golang v1.14.0
 	github.com/sirupsen/logrus v1.9.0
