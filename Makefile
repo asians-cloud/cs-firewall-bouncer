@@ -6,7 +6,7 @@ GOBUILD=$(GOCMD) build
 GOTEST=$(GOCMD) test
 
 BINARY_NAME=crowdsec-firewall-bouncer
-GO_MODULE_NAME=github.com/crowdsecurity/cs-firewall-bouncer
+GO_MODULE_NAME=github.com/asians-cloud/cs-firewall-bouncer
 TARBALL_NAME=$(BINARY_NAME).tgz
 
 ifdef BUILD_STATIC
