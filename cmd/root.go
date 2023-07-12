@@ -13,7 +13,7 @@ import (
 	"syscall"
 
 	"github.com/coreos/go-systemd/v22/daemon"
-	"github.com/crowdsecurity/crowdsec/pkg/models"
+	"github.com/asians-cloud/crowdsec/pkg/models"
 	csbouncer "github.com/asians-cloud/go-cs-bouncer"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -180,7 +180,7 @@ func Execute() error {
 	g, ctx := errgroup.WithContext(context.Background())
 
 	g.Go(func() error {
-		bouncer.Run(ctx)
+		bouncer.RunStream(ctx)
 		return fmt.Errorf("stream api init failed")
 	})
 
