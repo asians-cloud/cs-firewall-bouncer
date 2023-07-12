@@ -4,8 +4,8 @@
 package iptables
 
 import (
-	"github.com/crowdsecurity/cs-firewall-bouncer/pkg/cfg"
-	"github.com/crowdsecurity/cs-firewall-bouncer/pkg/types"
+	"github.com/asians-cloud/firewall-bouncer/pkg/cfg"
+	"github.com/asians-cloud/firewall-bouncer/pkg/types"
 )
 
 func NewIPTables(config *cfg.BouncerConfig) (types.Backend, error) {

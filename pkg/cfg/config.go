@@ -50,10 +50,10 @@ type BouncerConfig struct {
 	SetType         string        `yaml:"ipset_type"`
 	SetSize         int           `yaml:"ipset_size"`
 
-	// specific to iptables, following https://github.com/crowdsecurity/cs-firewall-bouncer/issues/19
+	// specific to iptables, following https://github.com/asians-cloud/firewall-bouncer/issues/19
 	IptablesChains          []string `yaml:"iptables_chains"`
 	SupportedDecisionsTypes []string `yaml:"supported_decisions_types"`
-	// specific to nftables, following https://github.com/crowdsecurity/cs-firewall-bouncer/issues/74
+	// specific to nftables, following https://github.com/asians-cloud/firewall-bouncer/issues/74
 	Nftables struct {
 		Ipv4 nftablesFamilyConfig `yaml:"ipv4"`
 		Ipv6 nftablesFamilyConfig `yaml:"ipv6"`

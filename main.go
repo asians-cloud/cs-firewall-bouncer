@@ -3,7 +3,7 @@ package main
 import (
 	log "github.com/sirupsen/logrus"
 
-	"github.com/crowdsecurity/cs-firewall-bouncer/cmd"
+	"github.com/asians-cloud/firewall-bouncer/cmd"
 )
 
 func main() {

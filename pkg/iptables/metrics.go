@@ -12,7 +12,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/crowdsecurity/cs-firewall-bouncer/pkg/metrics"
+	"github.com/asians-cloud/firewall-bouncer/pkg/metrics"
 )
 
 type Ipsets struct {

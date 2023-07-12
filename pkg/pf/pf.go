@@ -10,8 +10,8 @@ import (
 
 	"github.com/asians-cloud/crowdsec/pkg/models"
 
-	"github.com/crowdsecurity/cs-firewall-bouncer/pkg/cfg"
-	"github.com/crowdsecurity/cs-firewall-bouncer/pkg/types"
+	"github.com/asians-cloud/firewall-bouncer/pkg/cfg"
+	"github.com/asians-cloud/firewall-bouncer/pkg/types"
 )
 
 type pf struct {

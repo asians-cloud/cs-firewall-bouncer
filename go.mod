@@ -1,4 +1,4 @@
-module github.com/crowdsecurity/cs-firewall-bouncer
+module github.com/asians-cloud/firewall-bouncer
 
 go 1.20
 

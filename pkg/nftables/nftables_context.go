@@ -15,7 +15,7 @@ import (
 
 	"github.com/crowdsecurity/go-cs-lib/pkg/slicetools"
 
-	"github.com/crowdsecurity/cs-firewall-bouncer/pkg/cfg"
+	"github.com/asians-cloud/firewall-bouncer/pkg/cfg"
 )
 
 var HookNameToHookID = map[string]nftables.ChainHook{

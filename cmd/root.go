@@ -23,9 +23,9 @@ import (
 	"github.com/crowdsecurity/go-cs-lib/pkg/csdaemon"
 	"github.com/crowdsecurity/go-cs-lib/pkg/version"
 
-	"github.com/crowdsecurity/cs-firewall-bouncer/pkg/backend"
-	"github.com/crowdsecurity/cs-firewall-bouncer/pkg/cfg"
-	"github.com/crowdsecurity/cs-firewall-bouncer/pkg/metrics"
+	"github.com/asians-cloud/firewall-bouncer/pkg/backend"
+	"github.com/asians-cloud/firewall-bouncer/pkg/cfg"
+	"github.com/asians-cloud/firewall-bouncer/pkg/metrics"
 )
 
 const (

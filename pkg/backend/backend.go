@@ -7,12 +7,12 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/asians-cloud/crowdsec/pkg/models"
-	"github.com/crowdsecurity/cs-firewall-bouncer/pkg/cfg"
-	"github.com/crowdsecurity/cs-firewall-bouncer/pkg/dryrun"
-	"github.com/crowdsecurity/cs-firewall-bouncer/pkg/iptables"
-	"github.com/crowdsecurity/cs-firewall-bouncer/pkg/nftables"
-	"github.com/crowdsecurity/cs-firewall-bouncer/pkg/pf"
-	"github.com/crowdsecurity/cs-firewall-bouncer/pkg/types"
+	"github.com/asians-cloud/firewall-bouncer/pkg/cfg"
+	"github.com/asians-cloud/firewall-bouncer/pkg/dryrun"
+	"github.com/asians-cloud/firewall-bouncer/pkg/iptables"
+	"github.com/asians-cloud/firewall-bouncer/pkg/nftables"
+	"github.com/asians-cloud/firewall-bouncer/pkg/pf"
+	"github.com/asians-cloud/firewall-bouncer/pkg/types"
 )
 
 type BackendCTX struct {
