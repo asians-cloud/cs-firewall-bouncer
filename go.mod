@@ -3,8 +3,8 @@ module github.com/asians-cloud/firewall-bouncer
 go 1.20
 
 require (
-	github.com/asians-cloud/crowdsec v1.5.2
-	github.com/asians-cloud/go-cs-bouncer v0.0.7
+	github.com/asians-cloud/crowdsec v1.5.3
+	github.com/asians-cloud/go-cs-bouncer v0.0.8
 	github.com/crowdsecurity/go-cs-lib v0.0.2
 	github.com/google/nftables v0.0.0-20220808154552-2eca00135732
 	github.com/prometheus/client_golang v1.15.1
