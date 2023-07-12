@@ -12,19 +12,20 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/coreos/go-systemd/v22/daemon"
-	"github.com/asians-cloud/crowdsec/pkg/models"
-	csbouncer "github.com/asians-cloud/go-cs-bouncer"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/exp/slices"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/asians-cloud/crowdsec/pkg/models"
+	csbouncer "github.com/asians-cloud/go-cs-bouncer"
+	"github.com/crowdsecurity/go-cs-lib/pkg/csdaemon"
+	"github.com/crowdsecurity/go-cs-lib/pkg/version"
+
 	"github.com/crowdsecurity/cs-firewall-bouncer/pkg/backend"
 	"github.com/crowdsecurity/cs-firewall-bouncer/pkg/cfg"
 	"github.com/crowdsecurity/cs-firewall-bouncer/pkg/metrics"
-	"github.com/crowdsecurity/cs-firewall-bouncer/pkg/version"
 )
 
 const (
@@ -34,20 +35,26 @@ const (
 func backendCleanup(backend *backend.BackendCTX) {
 	log.Info("Shutting down backend")
 	if err := backend.ShutDown(); err != nil {
-		log.Errorf("unable to shutdown backend: %s", err)
+		log.Errorf("while shutting down backend: %s", err)
 	}
 }
 
 func HandleSignals(ctx context.Context) error {
 	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, syscall.SIGTERM)
+	signal.Notify(signalChan, syscall.SIGTERM, syscall.SIGINT)
 
 	select {
-	case <-signalChan:
-		return fmt.Errorf("received SIGTERM")
+	case s := <-signalChan:
+		switch s {
+		case syscall.SIGTERM:
+			return fmt.Errorf("received SIGTERM")
+		case syscall.SIGINT:
+			return fmt.Errorf("received SIGINT")
+		}
 	case <-ctx.Done():
 		return ctx.Err()
 	}
+	return nil
 }
 
 func deleteDecisions(backend *backend.BackendCTX, decisions []*models.Decision, config *cfg.BouncerConfig) {
@@ -119,15 +126,14 @@ func Execute() error {
 	verbose := flag.Bool("v", false, "set verbose mode")
 	bouncerVersion := flag.Bool("V", false, "display version and exit")
 	testConfig := flag.Bool("t", false, "test config and exit")
+	showConfig := flag.Bool("T", false, "show full config (.yaml + .yaml.local) and exit")
 
 	flag.Parse()
 
 	if *bouncerVersion {
-		fmt.Print(version.ShowStr())
-		os.Exit(0)
+		fmt.Print(version.FullString())
+		return nil
 	}
-
-	log.Infof("crowdsec-firewall-bouncer %s", version.VersionStr())
 
 	if configPath == nil || *configPath == "" {
 		return fmt.Errorf("configuration file is required")
@@ -136,6 +142,11 @@ func Execute() error {
 	configBytes, err := cfg.MergedConfig(*configPath)
 	if err != nil {
 		return fmt.Errorf("unable to read config file: %w", err)
+	}
+
+	if *showConfig {
+		fmt.Println(string(configBytes))
+		return nil
 	}
 
 	config, err := cfg.NewConfig(bytes.NewReader(configBytes))
@@ -147,14 +158,11 @@ func Execute() error {
 		log.SetLevel(log.DebugLevel)
 	}
 
+	log.Infof("Starting crowdsec-firewall-bouncer %s", version.String())
+
 	backend, err := backend.NewBackend(config)
 	if err != nil {
 		return err
-	}
-
-	if *testConfig {
-		log.Info("config is valid")
-		os.Exit(0)
 	}
 
 	if err = backend.Init(); err != nil {
@@ -166,11 +174,17 @@ func Execute() error {
 	bouncer := &csbouncer.StreamBouncer{}
 	err = bouncer.ConfigReader(bytes.NewReader(configBytes))
 	if err != nil {
+		return err
+	}
+
+	bouncer.UserAgent = fmt.Sprintf("%s/%s", name, version.String())
+	if err := bouncer.Init(); err != nil {
 		return fmt.Errorf("unable to configure bouncer: %w", err)
 	}
-	bouncer.UserAgent = fmt.Sprintf("%s/%s", name, version.VersionStr())
-	if err := bouncer.Init(); err != nil {
-		return err
+
+	if *testConfig {
+		log.Info("config is valid")
+		return nil
 	}
 
 	if bouncer.InsecureSkipVerify != nil {
@@ -216,15 +230,19 @@ func Execute() error {
 		}
 	})
 
-	if config.Daemon {
-		sent, err := daemon.SdNotify(false, "READY=1")
-		if !sent && err != nil {
-			log.Errorf("Failed to notify: %v", err)
+	if config.Daemon != nil {
+		if *config.Daemon {
+			log.Debug("Ignoring deprecated 'daemonize' option")
+		} else {
+			log.Warn("The 'daemonize' config option is deprecated and treated as always true")
 		}
-		g.Go(func() error {
-			return HandleSignals(ctx)
-		})
 	}
+
+	_ = csdaemon.NotifySystemd(log.StandardLogger())
+
+	g.Go(func() error {
+		return HandleSignals(ctx)
+	})
 
 	if err := g.Wait(); err != nil {
 		return fmt.Errorf("process terminated with error: %w", err)

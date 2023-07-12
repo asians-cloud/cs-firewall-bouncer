@@ -3,13 +3,14 @@ package cfg
 import (
 	"fmt"
 	"io"
+	"os"
 
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 
-	"github.com/asians-cloud/crowdsec/pkg/yamlpatch"
-
-	"github.com/crowdsecurity/cs-firewall-bouncer/pkg/types"
+	"github.com/crowdsecurity/go-cs-lib/pkg/csstring"
+	"github.com/crowdsecurity/go-cs-lib/pkg/ptr"
+	"github.com/crowdsecurity/go-cs-lib/pkg/yamlpatch"
 )
 
 type PrometheusConfig struct {
@@ -31,13 +32,14 @@ const (
 	IptablesMode = "iptables"
 	NftablesMode = "nftables"
 	PfMode       = "pf"
+	DryRunMode   = "dry-run"
 )
 
 type BouncerConfig struct {
-	Mode            string        `yaml:"mode"` // ipset,iptables,tc
-	PidDir          string        `yaml:"pid_dir"`
+	Mode            string        `yaml:"mode"`    // ipset,iptables,tc
+	PidDir          string        `yaml:"pid_dir"` // unused
 	UpdateFrequency string        `yaml:"update_frequency"`
-	Daemon          bool          `yaml:"daemonize"`
+	Daemon          *bool         `yaml:"daemonize"` // unused
 	Logging         LoggingConfig `yaml:",inline"`
 	DisableIPV6     bool          `yaml:"disable_ipv6"`
 	DenyAction      string        `yaml:"deny_action"`
@@ -79,29 +81,30 @@ func NewConfig(reader io.Reader) (*BouncerConfig, error) {
 
 	fcontent, err := io.ReadAll(reader)
 	if err != nil {
-		return &BouncerConfig{}, err
+		return nil, err
 	}
-	err = yaml.Unmarshal(fcontent, &config)
+
+	configBuff := csstring.StrictExpand(string(fcontent), os.LookupEnv)
+
+	err = yaml.Unmarshal([]byte(configBuff), &config)
 	if err != nil {
-		return &BouncerConfig{}, fmt.Errorf("failed to unmarshal: %w", err)
+		return nil, fmt.Errorf("failed to unmarshal: %w", err)
 	}
 
 	if err = config.Logging.setup("crowdsec-firewall-bouncer.log"); err != nil {
-		return &BouncerConfig{}, fmt.Errorf("failed to setup logging: %w", err)
+		return nil, fmt.Errorf("failed to setup logging: %w", err)
 	}
 
 	if config.Mode == "" {
-		return &BouncerConfig{}, fmt.Errorf("config does not contain 'mode'")
+		return nil, fmt.Errorf("config does not contain 'mode'")
 	}
 
 	if len(config.SupportedDecisionsTypes) == 0 {
 		config.SupportedDecisionsTypes = []string{"ban"}
 	}
 
-	if config.PidDir == "" {
-		log.Warningf("missing 'pid_dir' directive, using default: '/var/run/'")
-
-		config.PidDir = "/var/run/"
+	if config.PidDir != "" {
+		log.Debug("Ignoring deprecated 'pid_dir' option")
 	}
 
 	if config.DenyLog && config.DenyLogPrefix == "" {
@@ -137,6 +140,8 @@ func NewConfig(reader io.Reader) (*BouncerConfig, error) {
 		if err != nil {
 			return nil, err
 		}
+	case DryRunMode:
+		// nothing specific to do
 	default:
 		log.Warningf("unexpected %s mode", config.Mode)
 	}
@@ -151,14 +156,14 @@ func pfConfig(config *BouncerConfig) error {
 func nftablesConfig(config *BouncerConfig) error {
 	// deal with defaults in a backward compatible way
 	if config.Nftables.Ipv4.Enabled == nil {
-		config.Nftables.Ipv4.Enabled = types.BoolPtr(true)
+		config.Nftables.Ipv4.Enabled = ptr.Of(true)
 	}
 
 	if config.Nftables.Ipv6.Enabled == nil {
 		if config.DisableIPV6 {
-			config.Nftables.Ipv4.Enabled = types.BoolPtr(false)
+			config.Nftables.Ipv4.Enabled = ptr.Of(false)
 		} else {
-			config.Nftables.Ipv6.Enabled = types.BoolPtr(true)
+			config.Nftables.Ipv6.Enabled = ptr.Of(true)
 		}
 	}
 
@@ -184,10 +189,10 @@ func nftablesConfig(config *BouncerConfig) error {
 
 	if !*config.Nftables.Ipv4.Enabled && !*config.Nftables.Ipv6.Enabled {
 		return fmt.Errorf("both IPv4 and IPv6 disabled, doing nothing")
-	} else {
-		if config.NftablesHooks == nil || len(config.NftablesHooks) == 0 {
-			config.NftablesHooks = []string{"input"}
-		}
+	}
+
+	if config.NftablesHooks == nil || len(config.NftablesHooks) == 0 {
+		config.NftablesHooks = []string{"input"}
 	}
 
 	return nil

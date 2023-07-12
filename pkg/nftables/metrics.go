@@ -31,17 +31,15 @@ type Set struct {
 	Nftables []struct {
 		Set struct {
 			Elem []struct {
-				Elem struct {
-				} `json:"elem"`
+				Elem struct{} `json:"elem"`
 			} `json:"elem"`
 		} `json:"set,omitempty"`
 	} `json:"nftables"`
 }
 
-func (c *nftContext) collectDroppedPackets(path string, hook string) (int, int, error) {
-	cmd := exec.Command(path, "-j", "list", "chain", c.ipFamily(), c.tableName, c.chainName+"-"+hook)
+func (c *nftContext) collectDroppedPackets(path string, chain string) (int, int, error) {
+	cmd := exec.Command(path, "-j", "list", "chain", c.ipFamily(), c.tableName, chain)
 	out, err := cmd.CombinedOutput()
-
 	if err != nil {
 		return 0, 0, fmt.Errorf("while running %s: %w", cmd.String(), err)
 	}
@@ -98,13 +96,22 @@ func (c *nftContext) collectDropped(path string, hooks []string) (int, int, int)
 
 	var droppedPackets, droppedBytes, banned int
 
-	for _, hook := range hooks {
-		pkt, byt, err := c.collectDroppedPackets(path, hook)
+	if c.setOnly {
+		pkt, byt, err := c.collectDroppedPackets(path, c.chainName)
 		if err != nil {
 			log.Errorf("can't collect dropped packets for ip%s from nft: %s", c.version, err)
 		}
 		droppedPackets += pkt
 		droppedBytes += byt
+	} else {
+		for _, hook := range hooks {
+			pkt, byt, err := c.collectDroppedPackets(path, c.chainName+"-"+hook)
+			if err != nil {
+				log.Errorf("can't collect dropped packets for ip%s from nft: %s", c.version, err)
+			}
+			droppedPackets += pkt
+			droppedBytes += byt
+		}
 	}
 
 	banned, err := c.collectActiveBannedIPs(path)
@@ -119,6 +126,13 @@ func (n *nft) CollectMetrics() {
 	path, err := exec.LookPath("nft")
 	if err != nil {
 		log.Error("can't monitor dropped packets: ", err)
+		return
+	}
+
+	cmd := exec.Command(path, "-j", "list", "tables")
+	_, err = cmd.CombinedOutput()
+	if err != nil {
+		log.Warningf("nft -j is not supported (requires 0.9.7), nftables metrics are disabled")
 		return
 	}
 

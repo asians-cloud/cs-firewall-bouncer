@@ -13,8 +13,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
 
+	"github.com/crowdsecurity/go-cs-lib/pkg/slicetools"
+
 	"github.com/crowdsecurity/cs-firewall-bouncer/pkg/cfg"
-	"github.com/crowdsecurity/cs-firewall-bouncer/pkg/slicetools"
 )
 
 var HookNameToHookID = map[string]nftables.ChainHook{
@@ -40,6 +41,11 @@ type nftContext struct {
 	chainName     string
 	tableName     string
 	setOnly       bool
+}
+
+// convert a binary representation of an IP (4 or 16 bytes) to a string.
+func reprIP(ip []byte) string {
+	return net.IP(ip).String()
 }
 
 func NewNFTV4Context(config *cfg.BouncerConfig) *nftContext {
@@ -206,11 +212,21 @@ func (c *nftContext) init(hooks []string, denyLog bool, denyLogPrefix string, de
 
 	log.Debugf("nftables: ip%s init starting", c.version)
 
+	var err error
+
 	if c.setOnly {
-		return c.initSetOnly()
+		err = c.initSetOnly()
+	} else {
+		err = c.initOwnTable(hooks, denyLog, denyLogPrefix, denyAction)
 	}
 
-	return c.initOwnTable(hooks, denyLog, denyLogPrefix, denyAction)
+	if err != nil && strings.Contains(err.Error(), "out of range") {
+		return fmt.Errorf("nftables: %w. Please check the name length of tables, sets and chains. "+
+			"Some legacy systems have 32 or 15 character limits. "+
+			"For example, use 'crowdsec-set' instead of 'crowdsec-blacklists'", err)
+	}
+
+	return err
 }
 
 func (c *nftContext) lookupTable() (*nftables.Table, error) {
@@ -229,7 +245,8 @@ func (c *nftContext) lookupTable() (*nftables.Table, error) {
 }
 
 func (c *nftContext) createRule(chain *nftables.Chain, set *nftables.Set,
-	denyLog bool, denyLogPrefix string, denyAction string) *nftables.Rule {
+	denyLog bool, denyLogPrefix string, denyAction string,
+) *nftables.Rule {
 	r := &nftables.Rule{
 		Table: c.table,
 		Chain: chain,
@@ -272,19 +289,36 @@ func (c *nftContext) createRule(chain *nftables.Chain, set *nftables.Set,
 	return r
 }
 
-func (c *nftContext) deleteElements(els []nftables.SetElement) error {
-	for _, chunk := range slicetools.Chunks(els, chunkSize) {
-		log.Debugf("removing %d ip%s elements from set", len(chunk), c.version)
-
-		if err := c.conn.SetDeleteElements(c.set, chunk); err != nil {
-			return fmt.Errorf("failed to remove ip%s elements from set: %w", c.version, err)
+func (c *nftContext) deleteElementChunk(els []nftables.SetElement) error {
+	if err := c.conn.SetDeleteElements(c.set, els); err != nil {
+		return fmt.Errorf("failed to remove ip%s elements from set: %w", c.version, err)
+	}
+	if err := c.conn.Flush(); err != nil {
+		if len(els) == 1 {
+			log.Debugf("deleting %s, failed to flush: %s", reprIP(els[0].Key), err)
+			return nil
 		}
-
-		if err := c.conn.Flush(); err != nil {
-			return fmt.Errorf("failed to flush ip%s conn: %w", c.version, err)
+		log.Infof("failed to flush chunk of %d elements, will retry each one: %s", len(els), err)
+		for _, el := range els {
+			if err := c.deleteElementChunk([]nftables.SetElement{el}); err != nil {
+				return err
+			}
 		}
 	}
+	return nil
+}
 
+func (c *nftContext) deleteElements(els []nftables.SetElement) error {
+	if len(els) <= chunkSize {
+		return c.deleteElementChunk(els)
+	}
+
+	log.Debugf("splitting %d elements into chunks of %d", len(els), chunkSize)
+	for _, chunk := range slicetools.Chunks(els, chunkSize) {
+		if err := c.deleteElementChunk(chunk); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

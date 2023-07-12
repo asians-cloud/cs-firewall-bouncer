@@ -9,7 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/asians-cloud/crowdsec/pkg/models"
-	"github.com/crowdsecurity/cs-firewall-bouncer/pkg/slicetools"
+	"github.com/crowdsecurity/go-cs-lib/pkg/slicetools"
 )
 
 type pfContext struct {

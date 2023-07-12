@@ -6,7 +6,6 @@ GOBUILD=$(GOCMD) build
 GOTEST=$(GOCMD) test
 
 BINARY_NAME=crowdsec-firewall-bouncer
-GO_MODULE_NAME=github.com/asians-cloud/cs-firewall-bouncer
 TARBALL_NAME=$(BINARY_NAME).tgz
 
 ifdef BUILD_STATIC
@@ -19,9 +18,9 @@ BUILD_TIMESTAMP?=$(shell date +%F"_"%T)
 BUILD_TAG?=$(shell git rev-parse HEAD)
 
 LD_OPTS_VARS=\
--X '$(GO_MODULE_NAME)/pkg/version.Version=$(BUILD_VERSION)' \
--X '$(GO_MODULE_NAME)/pkg/version.BuildDate=$(BUILD_TIMESTAMP)' \
--X '$(GO_MODULE_NAME)/pkg/version.Tag=$(BUILD_TAG)'
+-X 'github.com/crowdsecurity/go-cs-lib/pkg/version.Version=$(BUILD_VERSION)' \
+-X 'github.com/crowdsecurity/go-cs-lib/pkg/version.BuildDate=$(BUILD_TIMESTAMP)' \
+-X 'github.com/crowdsecurity/go-cs-lib/pkg/version.Tag=$(BUILD_TAG)'
 
 export CGO_ENABLED=0
 export LD_OPTS=-ldflags "-a -s -w -extldflags '-static' $(LD_OPTS_VARS)" \
@@ -89,6 +88,15 @@ func-tests: build
 #
 
 RELDIR = $(BINARY_NAME)-$(BUILD_VERSION)
+
+.PHONY: vendor
+vendor:
+	$(GOCMD) mod vendor
+	tar czf vendor.tgz vendor
+
+.PHONY: vendor-remove
+vendor-remove:
+	$(RM) -r vendor vendor.tgz
 
 # Called during platform-all, to reuse the directory for other platforms
 .PHONY: clean-release-dir
