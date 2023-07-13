@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/asians-cloud/crowdsec v1.5.4
-	github.com/asians-cloud/go-cs-bouncer v0.0.11
+	github.com/asians-cloud/go-cs-bouncer v0.0.12
 	github.com/crowdsecurity/go-cs-lib v0.0.2
 	github.com/google/nftables v0.0.0-20220808154552-2eca00135732
 	github.com/prometheus/client_golang v1.15.1
