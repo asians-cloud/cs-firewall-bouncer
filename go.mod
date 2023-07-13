@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/asians-cloud/crowdsec v1.5.6
-	github.com/asians-cloud/go-cs-bouncer v0.0.17
+	github.com/asians-cloud/go-cs-bouncer v0.0.19
 	github.com/crowdsecurity/go-cs-lib v0.0.2
 	github.com/google/nftables v0.0.0-20220808154552-2eca00135732
 	github.com/prometheus/client_golang v1.15.1
@@ -37,6 +37,8 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
+	github.com/hashicorp/go-retryablehttp v0.7.4 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/josharian/native v1.0.0 // indirect
