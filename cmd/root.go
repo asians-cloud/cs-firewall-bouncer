@@ -221,6 +221,7 @@ func Execute() error {
 			case <-ctx.Done():
 				return nil
 			case decisions := <-bouncer.Stream:
+                          log.Info(decisions)
 				if decisions == nil {
 					continue
 				}
