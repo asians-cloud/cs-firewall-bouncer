@@ -8,8 +8,8 @@ github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 h1:DklsrG3d
 github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2/go.mod h1:WaHUgvxTVq04UNunO+XhnAqY/wQc+bxr74GqbsZ/Jqw=
 github.com/asians-cloud/crowdsec v1.5.6 h1:ifZU+nA/QzftSwrEdfzpWcwilpOplWAlwldFUua7MHU=
 github.com/asians-cloud/crowdsec v1.5.6/go.mod h1:sJidntf3DbmJp4Mh81aEegagot02jUqOrA8xh2cCBCw=
-github.com/asians-cloud/go-cs-bouncer v0.0.19 h1:2/SAJmR6u2KeCIi4LUNWF3k0AXo93EEE6+rJtIr+YmE=
-github.com/asians-cloud/go-cs-bouncer v0.0.19/go.mod h1:+5/TmuhwKsF2C27tcLoj3JwRn7ksI3ZLiHS7aUFDJhg=
+github.com/asians-cloud/go-cs-bouncer v0.0.20 h1:Qgwu8gr/UCahkfvG9iWVM9uNU2ZsQEG8CrTA95X91E0=
+github.com/asians-cloud/go-cs-bouncer v0.0.20/go.mod h1:+5/TmuhwKsF2C27tcLoj3JwRn7ksI3ZLiHS7aUFDJhg=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
 github.com/cespare/xxhash/v2 v2.2.0 h1:DC2CZ1Ep5Y4k3ZQ899DldepgrayRUGE6BBZ/cd9Cj44=
