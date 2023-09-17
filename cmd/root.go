@@ -219,6 +219,7 @@ func Execute() error {
 		for {
 			select {
 			case <-ctx.Done():
+                          close(bouncer.Stream)
 				return nil
 			case decisions := <-bouncer.Stream:
                           log.Info(decisions)
